@@ -23,9 +23,7 @@ jobs:
     # Step 3: Sign MSIX package using Appx-Packer
     - name: Run Appx-Packer to sign MSIX
       run: |
-        # Navigate to the Appx-Packer directory and run the signing process
-        cd Appx-Packer
-        Start-Process -FilePath "appx-packer.exe" -ArgumentList `
+        Start-Process -FilePath "Appx-packer.exe" -ArgumentList `
           "/input ../extracted", `
           "/output ../signed_output/signed_sdl-min_1.0.0.0_x64.msix", `
           "/cert ../certificate.pfx", `
