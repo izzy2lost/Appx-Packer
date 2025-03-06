@@ -14,50 +14,24 @@ jobs:
     - name: Checkout Appx-Packer repository
       uses: actions/checkout@v4
 
-    # Step 2: Set up paths and variables for MSIX, certificate, and password
-    - name: Set up paths
-      run: |
-        $msixFilePath = "$GITHUB_WORKSPACE\sdl-min_1.0.0.0_x64.msix"
-        $certificatePath = "$GITHUB_WORKSPACE\certificate.pfx"
-        $password = "1330"
-        $outputFolder = "$GITHUB_WORKSPACE\signed_output"
-        $unpackedFolderPath = "$GITHUB_WORKSPACE\extracted"
-
-        # Create output folder if not exists
-        if (-not (Test-Path -Path $outputFolder)) {
-          New-Item -ItemType Directory -Path $outputFolder
-        }
-        if (-not (Test-Path -Path $unpackedFolderPath)) {
-          New-Item -ItemType Directory -Path $unpackedFolderPath
-        }
-
-        # Debugging step: Check if MSIX file exists
-        if (-not (Test-Path -Path $msixFilePath)) {
-          Write-Host "MSIX file not found: $msixFilePath"
-          exit 1
-        } else {
-          Write-Host "MSIX file path is valid: $msixFilePath"
-        }
-
-    # Step 3: Unpack MSIX package using 7zip
+    # Step 2: Unpack MSIX package using 7zip
     - name: Unpack MSIX package using 7zip
       run: |
         # Unpack the MSIX file
-        & "C:\Program Files\7-Zip\7z.exe" x $msixFilePath -o$unpackedFolderPath
+        & "C:\Program Files\7-Zip\7z.exe" x sdl-min_1.0.0.0_x64.msix -oextracted
 
-    # Step 4: Sign MSIX package using Appx-Packer
+    # Step 3: Sign MSIX package using Appx-Packer
     - name: Sign MSIX package using Appx-Packer
       run: |
-        cd $GITHUB_WORKSPACE\Appx-Packer
-        # Run Appx-Packer with the necessary arguments to sign the unpacked MSIX package
+        # Run Appx-Packer to sign the MSIX package
         Start-Process -FilePath "$GITHUB_WORKSPACE\Appx-Packer\Appx-Packer.exe" -ArgumentList `
-          "/input $unpackedFolderPath", `
-          "/output $outputFolder\signed_sdl-min_1.0.0.0_x64.msix", `
-          "/cert $certificatePath", `
+          "/input $GITHUB_WORKSPACE\extracted", `
+          "/output $GITHUB_WORKSPACE\signed_output\signed_sdl-min_1.0.0.0_x64.msix", `
+          "/cert $GITHUB_WORKSPACE\certificate.pfx", `
           "/password 1330" `
           -Wait
 
-    # Step 5: Upload the signed MSIX package
+    # Step 4: Upload the signed MSIX package
     - name: Upload signed MSIX package
       uses: actions/upload-artifact@v4
       with:
