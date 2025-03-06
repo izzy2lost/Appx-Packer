@@ -13,12 +13,37 @@ jobs:
     # Step 1: Checkout the Appx-Packer repository
     - name: Checkout Appx-Packer repository
       uses: actions/checkout@v4
-      
+
+    # Step 2: Set up paths and variables for MSIX, certificate, and password
+    - name: Set up paths
+      run: |
+        $msixFilePath = "$GITHUB_WORKSPACE\sdl-min_1.0.0.0_x64.msix"
+        $certificatePath = "$GITHUB_WORKSPACE\certificate.pfx"
+        $password = "1330"
+        $outputFolder = "$GITHUB_WORKSPACE\signed_output"
+        $unpackedFolderPath = "$GITHUB_WORKSPACE\extracted"
+
+        # Create output folder if not exists
+        if (-not (Test-Path -Path $outputFolder)) {
+          New-Item -ItemType Directory -Path $outputFolder
+        }
+        if (-not (Test-Path -Path $unpackedFolderPath)) {
+          New-Item -ItemType Directory -Path $unpackedFolderPath
+        }
+
+        # Debugging step: Check if MSIX file exists
+        if (-not (Test-Path -Path $msixFilePath)) {
+          Write-Host "MSIX file not found: $msixFilePath"
+          exit 1
+        } else {
+          Write-Host "MSIX file path is valid: $msixFilePath"
+        }
+
     # Step 3: Unpack MSIX package using 7zip
     - name: Unpack MSIX package using 7zip
       run: |
         # Unpack the MSIX file
-        & "C:\Program Files\7-Zip\7z.exe" x sdl-min_1.0.0.0_x64.msix -o extracted
+        & "C:\Program Files\7-Zip\7z.exe" x $msixFilePath -o$unpackedFolderPath
 
     # Step 4: Sign MSIX package using Appx-Packer
     - name: Sign MSIX package using Appx-Packer
@@ -27,7 +52,7 @@ jobs:
         # Run Appx-Packer with the necessary arguments to sign the unpacked MSIX package
         Start-Process -FilePath "$GITHUB_WORKSPACE\Appx-Packer\Appx-Packer.exe" -ArgumentList `
           "/input $unpackedFolderPath", `
-          "/output $packageOutputPath", `
+          "/output $outputFolder\signed_sdl-min_1.0.0.0_x64.msix", `
           "/cert $certificatePath", `
           "/password 1330" `
           -Wait
@@ -37,4 +62,4 @@ jobs:
       uses: actions/upload-artifact@v4
       with:
         name: signed-msix
-        path: $packageOutputPath
+        path: $GITHUB_WORKSPACE\signed_output\signed_sdl-min_1.0.0.0_x64.msix
