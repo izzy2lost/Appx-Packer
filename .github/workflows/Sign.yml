@@ -10,17 +10,13 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Install missing dependency for winget
+      - name: Download and Install Required Dependencies for Winget
         run: |
           Invoke-WebRequest -Uri https://aka.ms/Microsoft.VCLibs.x64.14.00.UWPDesktop -OutFile VCLibs.appx
-          Add-AppxPackage .\VCLibs.appx
+          Invoke-WebRequest -Uri https://aka.ms/Microsoft.UI.Xaml.2.8 -OutFile UI.Xaml.appx
+          Invoke-WebRequest -Uri https://github.com/microsoft/winget-cli/releases/download/v1.10.340/Microsoft.DesktopAppInstaller_8wekyb3d8bbwe.msixbundle -OutFile winget.msixbundle
+          Start-Process msixbundleinstaller.exe -ArgumentList "VCLibs.appx", "UI.Xaml.appx", "winget.msixbundle" -NoNewWindow -Wait
         shell: pwsh
-
-      - name: Install winget and wingetcreate
-        uses: Cyberboss/install-winget@v1
-        with:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          wget_release_id: latest   
 
       - name: Install MSIX Hero and wingetcreate
         run: |
