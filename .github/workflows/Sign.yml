@@ -16,6 +16,12 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           wget_release_id: latest
 
+      - name: Install missing dependency for winget
+        run: |
+          Invoke-WebRequest -Uri https://aka.ms/Microsoft.VCLibs.x64.14.00.UWPDesktop -OutFile VCLibs.appx
+          Add-AppxPackage .\VCLibs.appx
+        shell: pwsh
+
       - name: Install MSIX Hero and wingetcreate
         run: |
           winget install msixhero --silent --accept-source-agreements --accept-package-agreements
@@ -37,7 +43,7 @@ jobs:
         run: |
           $certPath = "selfsign.pfx"
           $password = "selfsignpassword"
-          $msixFile = "./your_package.msix"
+          $msixFile = "./sdl-min_1.0.0.0_x64.msix"
           
           "C:\Program Files\MSIX Hero\msixhero.exe" sign `
             --file "$msixFile" `
@@ -49,4 +55,4 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: Signed-MSIX
-          path: ./your_package.msix
+          path: ./sdl-min_1.0.0.0_x64.msix
