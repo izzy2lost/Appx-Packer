@@ -17,18 +17,34 @@ jobs:
     # Step 2: Unpack MSIX package using 7zip
     - name: Unpack MSIX package using 7zip
       run: |
-        # Unpack the MSIX file
         & "C:\Program Files\7-Zip\7z.exe" x sdl-min_1.0.0.0_x64.msix -oextracted
 
-    # Step 3: Sign MSIX package using Appx-Packer
+    # Step 3: Automate Appx-Packer GUI to sign MSIX
     - name: Run Appx-Packer to sign MSIX
       run: |
-        Start-Process -FilePath "Appx-packer.exe" -ArgumentList `
-          "/input ../extracted", `
-          "/output ../signed_output/signed_sdl-min_1.0.0.0_x64.msix", `
-          "/cert ../certificate.pfx", `
-          "/password 1330" `
-          -Wait
+        # Start Appx-Packer
+        $appxPacker = Start-Process -FilePath "Appx-Packer.exe" -PassThru
+        Start-Sleep -Seconds 3  # Wait for the GUI to open
+
+        # Load Windows Forms for SendKeys
+        Add-Type -AssemblyName System.Windows.Forms
+
+        # Bring Appx-Packer to the front
+        [System.Windows.Forms.SendKeys]::SendWait("%{TAB}")  # Alt+Tab to focus
+
+        # Input the paths and password (adjust based on UI layout)
+        Start-Sleep -Seconds 1
+        [System.Windows.Forms.SendKeys]::SendWait("extracted{TAB}")  # Set input folder
+        Start-Sleep -Seconds 1
+        [System.Windows.Forms.SendKeys]::SendWait("signed_output{TAB}")  # Set output folder
+        Start-Sleep -Seconds 1
+        [System.Windows.Forms.SendKeys]::SendWait("certificate.pfx{TAB}")  # Set certificate path
+        Start-Sleep -Seconds 1
+        [System.Windows.Forms.SendKeys]::SendWait("1330{ENTER}")  # Enter password
+        Start-Sleep -Seconds 3  # Wait for signing
+
+        # Close Appx-Packer if needed
+        Stop-Process -Name "Appx-Packer" -Force
 
     # Step 4: Upload the signed MSIX package
     - name: Upload signed MSIX package
