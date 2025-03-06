@@ -1,0 +1,63 @@
+name: Sign MSIX Package
+
+on:
+  push:
+    branches:
+      - main  # or whichever branch you prefer to trigger this workflow
+
+jobs:
+  sign-msix:
+    runs-on: windows-latest
+
+    steps:
+    # Step 1: Checkout the Appx-Packer repository
+    - name: Checkout Appx-Packer repository
+      uses: actions/checkout@v4
+    
+    # Step 2: Set up paths and variables for MSIX, certificate, and password
+    - name: Set up paths
+      run: |
+        $msixFilePath = "$env:GITHUB_WORKSPACE\sdl-min_1.0.0.0_x64.msix"
+        $certificatePath = "$env:GITHUB_WORKSPACE\certificate.pfx"
+        $password = "1330"
+        $outputFolder = "$env:GITHUB_WORKSPACE\signed_output"
+        $packageOutputPath = "$outputFolder\signed_sdl-min_1.0.0.0_x64.msix"
+        $unpackedFolderPath = "$env:GITHUB_WORKSPACE\unpacked_msix"
+
+        # Create output folder if not exists
+        if (-not (Test-Path -Path $outputFolder)) {
+          New-Item -ItemType Directory -Path $outputFolder
+        }
+        if (-not (Test-Path -Path $unpackedFolderPath)) {
+          New-Item -ItemType Directory -Path $unpackedFolderPath
+        }
+
+        echo "MSIX file path: $msixFilePath"
+        echo "Certificate path: $certificatePath"
+        echo "Output folder: $outputFolder"
+        echo "Unpacked folder path: $unpackedFolderPath"
+
+    # Step 3: Unpack MSIX package using 7zip
+    - name: Unpack MSIX package using 7zip
+      run: |
+        # Unpack the MSIX file
+        & "C:\Program Files\7-Zip\7z.exe" x $msixFilePath -o$unpackedFolderPath
+
+    # Step 4: Sign MSIX package using Appx-Packer
+    - name: Sign MSIX package using Appx-Packer
+      run: |
+        cd $env:GITHUB_WORKSPACE\Appx-Packer
+        # Run Appx-Packer with the necessary arguments to sign the unpacked MSIX package
+        Start-Process -FilePath "$env:GITHUB_WORKSPACE\Appx-Packer\Appx-Packer.exe" -ArgumentList `
+          "/input $unpackedFolderPath", `
+          "/output $packageOutputPath", `
+          "/cert $certificatePath", `
+          "/password 1330" `
+          -Wait
+
+    # Step 5: Upload the signed MSIX package
+    - name: Upload signed MSIX package
+      uses: actions/upload-artifact@v4
+      with:
+        name: signed-msix
+        path: $packageOutputPath
