@@ -3,7 +3,7 @@ name: Sign MSIX Package
 on:
   push:
     branches:
-      - main  # or whichever branch you prefer to trigger this workflow
+      - main  # Adjust as needed
 
 jobs:
   sign-msix:
@@ -17,49 +17,67 @@ jobs:
     # Step 2: Unpack MSIX package using 7zip
     - name: Unpack MSIX package using 7zip
       run: |
+        Write-Host "Unpacking MSIX package..."
         & "C:\Program Files\7-Zip\7z.exe" x sdl-min_1.0.0.0_x64.msix -oextracted
+        if (!(Test-Path "extracted")) { 
+          Write-Host "Error: Extraction failed!"
+          exit 1
+        }
+        Write-Host "Unpacking complete!"
 
     # Step 3: Automate Appx-Packer GUI to sign MSIX
     - name: Run Appx-Packer to sign MSIX
       run: |
-        # Start Appx-Packer
-        $appxPacker = Start-Process -FilePath "Appx-Packer.exe" -PassThru
+        Write-Host "Starting Appx-Packer..."
+        $appxPacker = Start-Process -FilePath "Appx-packer.exe" -PassThru
         Start-Sleep -Seconds 5  # Wait for the GUI to open
+        Write-Host "Appx-Packer opened!"
 
         # Load Windows Forms for SendKeys
         Add-Type -AssemblyName System.Windows.Forms
 
         # Bring Appx-Packer to the front
-        [System.Windows.Forms.SendKeys]::SendWait("%{TAB}")  # Alt+Tab to focus
+        Write-Host "Focusing Appx-Packer window..."
+        [System.Windows.Forms.SendKeys]::SendWait("%{TAB}")  
 
-        # Input the paths and password (adjust if needed)
+        # Input the paths and password
+        Write-Host "Entering input folder path..."
         Start-Sleep -Seconds 1
         [System.Windows.Forms.SendKeys]::SendWait("extracted{TAB}")
+
+        Write-Host "Entering output folder path..."
         Start-Sleep -Seconds 1
         [System.Windows.Forms.SendKeys]::SendWait("signed_output{TAB}")
+
+        Write-Host "Entering certificate path..."
         Start-Sleep -Seconds 1
         [System.Windows.Forms.SendKeys]::SendWait("certificate.pfx{TAB}")
+
+        Write-Host "Entering password..."
         Start-Sleep -Seconds 1
-        [System.Windows.Forms.SendKeys]::SendWait("1330{ENTER}")  # Enter password
+        [System.Windows.Forms.SendKeys]::SendWait("1330{ENTER}")  
 
         # Wait for the signed file to appear
+        Write-Host "Waiting for signing process to complete..."
         $signedFile = "signed_output/signed_sdl-min_1.0.0.0_x64.msix"
-        $timeout = 300  # 5-minute timeout
+        $timeout = 300
         $elapsed = 0
         while (!(Test-Path $signedFile) -and ($elapsed -lt $timeout)) {
           Start-Sleep -Seconds 5
           $elapsed += 5
+          Write-Host "Checking for signed file... Elapsed time: $elapsed seconds"
         }
 
         if (!(Test-Path $signedFile)) {
-          Write-Host "Signing process failed or took too long!"
+          Write-Host "Error: Signing process failed or took too long!"
           exit 1
         }
 
         Write-Host "Signing complete!"
 
         # Close Appx-Packer
-        Stop-Process -Name "Appx-Packer" -Force
+        Write-Host "Closing Appx-Packer..."
+        Stop-Process -Name "Appx-packer" -Force
 
     # Step 4: Upload the signed MSIX package
     - name: Upload signed MSIX package
