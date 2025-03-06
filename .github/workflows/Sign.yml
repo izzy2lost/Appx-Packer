@@ -24,7 +24,7 @@ jobs:
       run: |
         # Start Appx-Packer
         $appxPacker = Start-Process -FilePath "Appx-Packer.exe" -PassThru
-        Start-Sleep -Seconds 3  # Wait for the GUI to open
+        Start-Sleep -Seconds 5  # Wait for the GUI to open
 
         # Load Windows Forms for SendKeys
         Add-Type -AssemblyName System.Windows.Forms
@@ -32,18 +32,33 @@ jobs:
         # Bring Appx-Packer to the front
         [System.Windows.Forms.SendKeys]::SendWait("%{TAB}")  # Alt+Tab to focus
 
-        # Input the paths and password (adjust based on UI layout)
+        # Input the paths and password (adjust if needed)
         Start-Sleep -Seconds 1
-        [System.Windows.Forms.SendKeys]::SendWait("extracted{TAB}")  # Set input folder
+        [System.Windows.Forms.SendKeys]::SendWait("extracted{TAB}")
         Start-Sleep -Seconds 1
-        [System.Windows.Forms.SendKeys]::SendWait("signed_output{TAB}")  # Set output folder
+        [System.Windows.Forms.SendKeys]::SendWait("signed_output{TAB}")
         Start-Sleep -Seconds 1
-        [System.Windows.Forms.SendKeys]::SendWait("certificate.pfx{TAB}")  # Set certificate path
+        [System.Windows.Forms.SendKeys]::SendWait("certificate.pfx{TAB}")
         Start-Sleep -Seconds 1
         [System.Windows.Forms.SendKeys]::SendWait("1330{ENTER}")  # Enter password
-        Start-Sleep -Seconds 3  # Wait for signing
 
-        # Close Appx-Packer if needed
+        # Wait for the signed file to appear
+        $signedFile = "signed_output/signed_sdl-min_1.0.0.0_x64.msix"
+        $timeout = 300  # 5-minute timeout
+        $elapsed = 0
+        while (!(Test-Path $signedFile) -and ($elapsed -lt $timeout)) {
+          Start-Sleep -Seconds 5
+          $elapsed += 5
+        }
+
+        if (!(Test-Path $signedFile)) {
+          Write-Host "Signing process failed or took too long!"
+          exit 1
+        }
+
+        Write-Host "Signing complete!"
+
+        # Close Appx-Packer
         Stop-Process -Name "Appx-Packer" -Force
 
     # Step 4: Upload the signed MSIX package
