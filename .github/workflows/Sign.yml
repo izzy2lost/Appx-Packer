@@ -12,7 +12,7 @@ jobs:
 
       - name: Download and Install Required Dependencies for Winget
         run: |
-          Invoke-WebRequest -Uri https://aka.ms/Microsoft.VCLibs.x64.14.00.UWPDesktop -OutFile VCLibs.appx
+          Invoke-WebRequest -Uri https://aka.ms/Microsoft.VCLibs.x64.14.00.Desktop.appx -OutFile VCLibs.appx
           Invoke-WebRequest -Uri https://aka.ms/Microsoft.UI.Xaml.2.8 -OutFile UI.Xaml.appx
           Invoke-WebRequest -Uri https://github.com/microsoft/winget-cli/releases/download/v1.10.340/Microsoft.DesktopAppInstaller_8wekyb3d8bbwe.msixbundle -OutFile winget.msixbundle
           Start-Process msixbundleinstaller.exe -ArgumentList "VCLibs.appx", "UI.Xaml.appx", "winget.msixbundle" -NoNewWindow -Wait
