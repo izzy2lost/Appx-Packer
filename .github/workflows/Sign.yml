@@ -21,13 +21,14 @@ jobs:
         & "C:\Program Files\7-Zip\7z.exe" x sdl-min_1.0.0.0_x64.msix -oextracted
 
     # Step 3: Sign MSIX package using Appx-Packer
-    - name: Sign MSIX package using Appx-Packer
+    - name: Run Appx-Packer to sign MSIX
       run: |
-        # Run Appx-Packer to sign the MSIX package
-        Start-Process -FilePath "$GITHUB_WORKSPACE\Appx-Packer\Appx-packer.exe" -ArgumentList `
-          "/input $GITHUB_WORKSPACE\extracted", `
-          "/output $GITHUB_WORKSPACE\signed_output\signed_sdl-min_1.0.0.0_x64.msix", `
-          "/cert $GITHUB_WORKSPACE\certificate.pfx", `
+        # Navigate to the Appx-Packer directory and run the signing process
+        cd Appx-Packer
+        Start-Process -FilePath "appx-packer.exe" -ArgumentList `
+          "/input ../extracted", `
+          "/output ../signed_output/signed_sdl-min_1.0.0.0_x64.msix", `
+          "/cert ../certificate.pfx", `
           "/password 1330" `
           -Wait
 
@@ -36,4 +37,4 @@ jobs:
       uses: actions/upload-artifact@v4
       with:
         name: signed-msix
-        path: $GITHUB_WORKSPACE\signed_output\signed_sdl-min_1.0.0.0_x64.msix
+        path: signed_output/signed_sdl-min_1.0.0.0_x64.msix
