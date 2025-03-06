@@ -73,7 +73,7 @@ jobs:
 
         # Wait for the signing process
         Write-Host "Waiting for signing process to complete..."
-        $signedFile = "signed_output/signed_sdl-min_1.0.0.0_x64.msix"
+        $signedFile = "signed_output/signed_sdl-min_1.0.0.0_x64.appx"
         $timeout = 300
         $elapsed = 0
         while (!(Test-Path $signedFile) -and ($elapsed -lt $timeout)) {
@@ -98,4 +98,4 @@ jobs:
       uses: actions/upload-artifact@v4
       with:
         name: signed-msix
-        path: signed_output/signed_sdl-min_1.0.0.0_x64.msix
+        path: signed_output/signed_sdl-min_1.0.0.0_x64.appx
