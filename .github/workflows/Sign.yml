@@ -10,9 +10,15 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Install MSIX Hero
-        run: winget install msixhero --silent --accept-source-agreements --accept-package-agreements
+      - name: Install winget
+        uses: Cyberboss/install-winget@v1
+        with:
+         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+         wget_release_id: latest
 
+      - name: Install wingetcreate
+        run: winget install wingetcreate --disable-interactivity --accept-source-agreements --disable-interactivity --accept-source-agreements
+      
       - name: Generate Self-Signed Certificate
         run: |
           $certPath = "selfsign.pfx"
