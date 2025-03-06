@@ -13,16 +13,16 @@ jobs:
     # Step 1: Checkout the Appx-Packer repository
     - name: Checkout Appx-Packer repository
       uses: actions/checkout@v4
-    
+      
     # Step 2: Set up paths and variables for MSIX, certificate, and password
     - name: Set up paths
       run: |
-        $msixFilePath = "$env:GITHUB_WORKSPACE\sdl-min_1.0.0.0_x64.msix"
-        $certificatePath = "$env:GITHUB_WORKSPACE\certificate.pfx"
+        $msixFilePath = "$GITHUB_WORKSPACE\sdl-min_1.0.0.0_x64.msix"
+        $certificatePath = "$GITHUB_WORKSPACE\certificate.pfx"
         $password = "1330"
-        $outputFolder = "$env:GITHUB_WORKSPACE\signed_output"
+        $outputFolder = "$GITHUB_WORKSPACE\signed_output"
         $packageOutputPath = "$outputFolder\signed_sdl-min_1.0.0.0_x64.msix"
-        $unpackedFolderPath = "$env:GITHUB_WORKSPACE\unpacked_msix"
+        $unpackedFolderPath = "$GITHUB_WORKSPACE\unpacked_msix"
 
         # Create output folder if not exists
         if (-not (Test-Path -Path $outputFolder)) {
@@ -32,10 +32,13 @@ jobs:
           New-Item -ItemType Directory -Path $unpackedFolderPath
         }
 
-        echo "MSIX file path: $msixFilePath"
-        echo "Certificate path: $certificatePath"
-        echo "Output folder: $outputFolder"
-        echo "Unpacked folder path: $unpackedFolderPath"
+        # Debugging step: Check if MSIX file exists
+        if (-not (Test-Path -Path $msixFilePath)) {
+          Write-Host "MSIX file not found: $msixFilePath"
+          exit 1
+        } else {
+          Write-Host "MSIX file path is valid: $msixFilePath"
+        }
 
     # Step 3: Unpack MSIX package using 7zip
     - name: Unpack MSIX package using 7zip
@@ -46,9 +49,9 @@ jobs:
     # Step 4: Sign MSIX package using Appx-Packer
     - name: Sign MSIX package using Appx-Packer
       run: |
-        cd $env:GITHUB_WORKSPACE\Appx-Packer
+        cd $GITHUB_WORKSPACE\Appx-Packer
         # Run Appx-Packer with the necessary arguments to sign the unpacked MSIX package
-        Start-Process -FilePath "$env:GITHUB_WORKSPACE\Appx-Packer\Appx-Packer.exe" -ArgumentList `
+        Start-Process -FilePath "$GITHUB_WORKSPACE\Appx-Packer\Appx-Packer.exe" -ArgumentList `
           "/input $unpackedFolderPath", `
           "/output $packageOutputPath", `
           "/cert $certificatePath", `
