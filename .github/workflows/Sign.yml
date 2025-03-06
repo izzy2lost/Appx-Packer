@@ -24,7 +24,7 @@ jobs:
     - name: Sign MSIX package using Appx-Packer
       run: |
         # Run Appx-Packer to sign the MSIX package
-        Start-Process -FilePath "$GITHUB_WORKSPACE\Appx-Packer\Appx-Packer.exe" -ArgumentList `
+        Start-Process -FilePath "$GITHUB_WORKSPACE\Appx-Packer\Appx-packer.exe" -ArgumentList `
           "/input $GITHUB_WORKSPACE\extracted", `
           "/output $GITHUB_WORKSPACE\signed_output\signed_sdl-min_1.0.0.0_x64.msix", `
           "/cert $GITHUB_WORKSPACE\certificate.pfx", `
