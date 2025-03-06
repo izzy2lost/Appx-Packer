@@ -10,15 +10,18 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Install winget
+      - name: Install winget and wingetcreate
         uses: Cyberboss/install-winget@v1
         with:
-         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-         wget_release_id: latest
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          wget_release_id: latest
 
-      - name: Install wingetcreate
-        run: winget install wingetcreate --disable-interactivity --accept-source-agreements --disable-interactivity --accept-source-agreements
-      
+      - name: Install MSIX Hero and wingetcreate
+        run: |
+          winget install msixhero --silent --accept-source-agreements --accept-package-agreements
+          winget install wingetcreate --disable-interactivity --accept-source-agreements
+        shell: pwsh
+
       - name: Generate Self-Signed Certificate
         run: |
           $certPath = "selfsign.pfx"
@@ -34,7 +37,7 @@ jobs:
         run: |
           $certPath = "selfsign.pfx"
           $password = "selfsignpassword"
-          $msixFile = "./sdl-min_1.0.0.0_x64.msix"
+          $msixFile = "./your_package.msix"
           
           "C:\Program Files\MSIX Hero\msixhero.exe" sign `
             --file "$msixFile" `
@@ -46,4 +49,4 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: Signed-MSIX
-          path: ./sdl-min_1.0.0.0_x64.msix
+          path: ./your_package.msix
